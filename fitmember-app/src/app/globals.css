@@ -1,0 +1,520 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  /* Custom coral colors */
+  --color-coral: var(--coral);
+  --color-coral-light: var(--coral-light);
+  --color-coral-dark: var(--coral-dark);
+}
+
+:root {
+  --radius: 0.5rem;
+
+  /* Gold/Beige Theme - Main Colors */
+  --gold: #C4A574;
+  --gold-light: #F5F0E8;
+  --gold-dark: #A68B5B;
+
+  /* Background & Foreground */
+  --background: #FFFFFF;
+  --foreground: #1A1A1A;
+
+  /* Card */
+  --card: #FFFFFF;
+  --card-foreground: #1A1A1A;
+
+  /* Popover */
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1A;
+
+  /* Primary - Gold/Beige */
+  --primary: #C4A574;
+  --primary-foreground: #FFFFFF;
+
+  /* Secondary - Dark Gray */
+  --secondary: #2D2D2D;
+  --secondary-foreground: #FFFFFF;
+
+  /* Muted - Light Gray/Beige */
+  --muted: #F7F5F2;
+  --muted-foreground: #737373;
+
+  /* Accent - Light Gold */
+  --accent: #F5F0E8;
+  --accent-foreground: #C4A574;
+
+  /* Destructive */
+  --destructive: #DC2626;
+
+  /* Border & Input */
+  --border: #E8E4DE;
+  --input: #E8E4DE;
+  --ring: #C4A574;
+
+  /* Chart Colors - Gold Palette */
+  --chart-1: #C4A574;
+  --chart-2: #D4B88A;
+  --chart-3: #E4CBA0;
+  --chart-4: #F0DEB6;
+  --chart-5: #F5F0E8;
+
+  /* Sidebar */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1A1A1A;
+  --sidebar-primary: #C4A574;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F5F0E8;
+  --sidebar-accent-foreground: #C4A574;
+  --sidebar-border: #E8E4DE;
+  --sidebar-ring: #C4A574;
+}
+
+.dark {
+  --background: #0A0A0A;
+  --foreground: #FAFAFA;
+  --card: #141414;
+  --card-foreground: #FAFAFA;
+  --popover: #141414;
+  --popover-foreground: #FAFAFA;
+  --primary: #C4A574;
+  --primary-foreground: #FFFFFF;
+  --secondary: #262626;
+  --secondary-foreground: #FAFAFA;
+  --muted: #262626;
+  --muted-foreground: #A3A3A3;
+  --accent: #2A2520;
+  --accent-foreground: #D4B88A;
+  --destructive: #DC2626;
+  --border: #262626;
+  --input: #262626;
+  --ring: #C4A574;
+  --chart-1: #C4A574;
+  --chart-2: #D4B88A;
+  --chart-3: #E4CBA0;
+  --chart-4: #F0DEB6;
+  --chart-5: #F5F0E8;
+  --sidebar: #141414;
+  --sidebar-foreground: #FAFAFA;
+  --sidebar-primary: #C4A574;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #2A2520;
+  --sidebar-accent-foreground: #D4B88A;
+  --sidebar-border: #262626;
+  --sidebar-ring: #C4A574;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+}
+
+/* Custom Utility Classes for Gold Theme */
+@layer utilities {
+  /* Gradient backgrounds */
+  .bg-gold-gradient {
+    background: linear-gradient(135deg, #C4A574 0%, #D4B88A 100%);
+  }
+
+  .bg-gold-gradient-soft {
+    background: linear-gradient(135deg, #F5F0E8 0%, #FFFFFF 100%);
+  }
+
+  /* Text gradient */
+  .text-gold-gradient {
+    background: linear-gradient(135deg, #C4A574 0%, #A68B5B 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Watermark style for English headlines */
+  .watermark-text {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    color: #C4A574;
+    text-transform: uppercase;
+  }
+
+  /* Premium shadow */
+  .shadow-gold {
+    box-shadow: 0 2px 10px rgba(196, 165, 116, 0.1);
+  }
+
+  .shadow-gold-lg {
+    box-shadow: 0 4px 20px rgba(196, 165, 116, 0.15);
+  }
+
+  /* Hover effects */
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Section divider */
+  .section-divider {
+    width: 40px;
+    height: 1px;
+    background-color: #C4A574;
+    margin: 0 auto;
+  }
+
+  /* Safe area for mobile */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Button Styles */
+.btn-primary {
+  background-color: transparent;
+  color: var(--foreground);
+  font-weight: 400;
+  padding: 0.875rem 2rem;
+  border-radius: 0;
+  border: 1px solid var(--border);
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-primary:hover {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+  border-color: var(--secondary);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+  font-weight: 400;
+  padding: 0.875rem 2rem;
+  border-radius: 0;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-secondary:hover {
+  background-color: #1f1f1f;
+}
+
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+.btn-outline {
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  font-weight: 400;
+  padding: 0.875rem 2rem;
+  border-radius: 0;
+  background-color: transparent;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-outline:hover {
+  background-color: var(--muted);
+}
+
+.btn-outline:active {
+  transform: scale(0.98);
+}
+
+/* Card styles */
+.card-premium {
+  background-color: var(--card);
+  border-radius: 0;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  transition: box-shadow 0.2s ease;
+}
+
+.card-premium:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+}
+
+/* Input styles */
+.input-minimal {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0;
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+.input-minimal:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* Animation keyframes */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-gold {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(196, 165, 116, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(196, 165, 116, 0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out forwards;
+}
+
+.animate-pulse-gold {
+  animation: pulse-gold 2s infinite;
+}
+
+/* ===== Responsive Typography System ===== */
+/* Fluid typography using clamp() for smooth scaling across all screen sizes */
+
+:root {
+  /* Base font sizes for different screen sizes */
+  --text-xs-min: 0.625rem;   /* 10px */
+  --text-xs-max: 0.75rem;    /* 12px */
+  --text-sm-min: 0.75rem;    /* 12px */
+  --text-sm-max: 0.875rem;   /* 14px */
+  --text-base-min: 0.875rem; /* 14px */
+  --text-base-max: 1rem;     /* 16px */
+  --text-lg-min: 1rem;       /* 16px */
+  --text-lg-max: 1.125rem;   /* 18px */
+  --text-xl-min: 1.125rem;   /* 18px */
+  --text-xl-max: 1.25rem;    /* 20px */
+  --text-2xl-min: 1.25rem;   /* 20px */
+  --text-2xl-max: 1.5rem;    /* 24px */
+  --text-3xl-min: 1.5rem;    /* 24px */
+  --text-3xl-max: 1.875rem;  /* 30px */
+}
+
+/* Responsive text utility classes */
+@layer utilities {
+  /* Extra small responsive text */
+  .text-responsive-xs {
+    font-size: clamp(var(--text-xs-min), 2.5vw, var(--text-xs-max));
+  }
+
+  /* Small responsive text */
+  .text-responsive-sm {
+    font-size: clamp(var(--text-sm-min), 3vw, var(--text-sm-max));
+  }
+
+  /* Base responsive text */
+  .text-responsive-base {
+    font-size: clamp(var(--text-base-min), 3.5vw, var(--text-base-max));
+  }
+
+  /* Large responsive text */
+  .text-responsive-lg {
+    font-size: clamp(var(--text-lg-min), 4vw, var(--text-lg-max));
+  }
+
+  /* Extra large responsive text */
+  .text-responsive-xl {
+    font-size: clamp(var(--text-xl-min), 4.5vw, var(--text-xl-max));
+  }
+
+  /* 2XL responsive text */
+  .text-responsive-2xl {
+    font-size: clamp(var(--text-2xl-min), 5vw, var(--text-2xl-max));
+  }
+
+  /* 3XL responsive text (headings) */
+  .text-responsive-3xl {
+    font-size: clamp(var(--text-3xl-min), 6vw, var(--text-3xl-max));
+  }
+}
+
+/* Mobile-specific adjustments for very small screens (iPhone SE, etc.) */
+@media screen and (max-width: 374px) {
+  body {
+    font-size: 14px;
+  }
+
+  .watermark-text {
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* Reduce padding on very small screens */
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.8125rem;
+  }
+
+  /* Smaller icons spacing */
+  .icon-responsive {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+/* Standard mobile (iPhone 12, 13, 14, etc.) */
+@media screen and (min-width: 375px) and (max-width: 413px) {
+  body {
+    font-size: 15px;
+  }
+
+  .watermark-text {
+    font-size: 0.6875rem;
+  }
+}
+
+/* Large mobile (iPhone Pro Max, Samsung Galaxy, etc.) */
+@media screen and (min-width: 414px) and (max-width: 479px) {
+  body {
+    font-size: 16px;
+  }
+
+  .watermark-text {
+    font-size: 0.75rem;
+  }
+}
+
+/* Tablet and above */
+@media screen and (min-width: 480px) {
+  body {
+    font-size: 16px;
+  }
+}
+
+/* ===== Responsive Component Adjustments ===== */
+
+/* Timer display responsive */
+.timer-display {
+  font-size: clamp(2.5rem, 15vw, 4rem);
+}
+
+/* Stats/metrics display responsive */
+.stat-value {
+  font-size: clamp(1.125rem, 5vw, 1.5rem);
+}
+
+.stat-label {
+  font-size: clamp(0.625rem, 2.8vw, 0.75rem);
+}
+
+/* Card content responsive */
+.card-title {
+  font-size: clamp(0.875rem, 4vw, 1rem);
+}
+
+.card-description {
+  font-size: clamp(0.75rem, 3.2vw, 0.875rem);
+}
+
+/* Navigation responsive */
+.nav-label {
+  font-size: clamp(0.625rem, 2.8vw, 0.75rem);
+}
+
+/* Form input responsive */
+.input-responsive {
+  font-size: clamp(0.875rem, 4vw, 1rem);
+  padding: clamp(0.625rem, 3vw, 0.875rem) clamp(0.75rem, 3.5vw, 1rem);
+}
+
+/* Badge/tag responsive */
+.badge-responsive {
+  font-size: clamp(0.625rem, 2.5vw, 0.75rem);
+  padding: clamp(0.125rem, 1vw, 0.25rem) clamp(0.375rem, 2vw, 0.5rem);
+}
+
+/* Truncate text with ellipsis for small screens */
+.text-truncate-responsive {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Multi-line truncate */
+.text-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.text-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Hide scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

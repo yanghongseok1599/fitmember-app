@@ -1,0 +1,10 @@
+{
+  "name": "FitMember - 헬스장 회원 관리 앱",
+  "short_name": "FitMember",
+  "description": "운동 습관을 만들고 커뮤니티와 함께 성장하세요",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "orientation": "portrait"
+}

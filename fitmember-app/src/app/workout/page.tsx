@@ -161,6 +161,7 @@ export default function WorkoutPage() {
   // Photo upload states (인증 사진)
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
   const [verifyPhoto, setVerifyPhoto] = useState<string | null>(null);
+  const [verifyMessage, setVerifyMessage] = useState('');
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   // Workout start time for calorie calculation
@@ -248,6 +249,7 @@ export default function WorkoutPage() {
   const openVerifyDialog = () => {
     if (!savedRecord) return;
     setVerifyPhoto(null);
+    setVerifyMessage('');
     setShowVerifyDialog(true);
   };
 
@@ -257,13 +259,18 @@ export default function WorkoutPage() {
 
     setIsSharing(true);
     try {
-      const content = workoutStore.generateShareContent(savedRecord);
+      const workoutContent = workoutStore.generateShareContent(savedRecord);
+      // 추가 메시지가 있으면 운동 기록 앞에 추가
+      const content = verifyMessage.trim()
+        ? `${verifyMessage.trim()}\n\n${workoutContent}`
+        : workoutContent;
       const images = verifyPhoto ? [verifyPhoto] : [];
       postStore.addPost(content, images, 'workout');
       workoutStore.markAsShared(savedRecord.id);
       setSavedRecord({ ...savedRecord, shared: true });
       setShowVerifyDialog(false);
       setVerifyPhoto(null);
+      setVerifyMessage('');
       router.push('/community');
     } finally {
       setIsSharing(false);
@@ -1320,6 +1327,7 @@ export default function WorkoutPage() {
                 onClick={() => {
                   setShowVerifyDialog(false);
                   setVerifyPhoto(null);
+                  setVerifyMessage('');
                 }}
                 className="p-1 text-muted-foreground hover:text-foreground"
               >
@@ -1369,6 +1377,23 @@ export default function WorkoutPage() {
                 )}
               </div>
 
+              {/* Additional Message Input */}
+              <div>
+                <label className="text-xs sm:text-sm text-muted-foreground mb-2 block">
+                  한마디 남기기 (선택)
+                </label>
+                <textarea
+                  value={verifyMessage}
+                  onChange={(e) => setVerifyMessage(e.target.value)}
+                  placeholder="오늘 운동 어땠나요? 소감을 남겨보세요!"
+                  className="w-full h-20 p-3 border border-border rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  maxLength={200}
+                />
+                <p className="text-[10px] text-muted-foreground text-right mt-1">
+                  {verifyMessage.length}/200
+                </p>
+              </div>
+
               {/* Workout Summary */}
               <div className="p-3 bg-muted/30 rounded-lg space-y-2">
                 <p className="text-xs sm:text-sm font-medium">오늘의 운동 요약</p>
@@ -1390,7 +1415,7 @@ export default function WorkoutPage() {
 
               {/* Info Text */}
               <p className="text-[10px] sm:text-xs text-muted-foreground text-center">
-                사진 없이도 인증할 수 있어요
+                사진과 한마디 없이도 인증할 수 있어요
               </p>
 
               {/* Action Buttons */}
@@ -1399,6 +1424,7 @@ export default function WorkoutPage() {
                   onClick={() => {
                     setShowVerifyDialog(false);
                     setVerifyPhoto(null);
+                    setVerifyMessage('');
                   }}
                   className="flex-1 py-2.5 rounded-lg text-xs sm:text-sm font-medium border border-border text-foreground hover:bg-muted transition-colors"
                 >

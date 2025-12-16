@@ -8,7 +8,7 @@ interface MemberData {
   nickname: string;
   gender: 'male' | 'female';
   profileImage?: string;
-  role?: 'user' | 'staff' | 'admin'; // 직원/관리자는 명예의 전당 제외
+  role?: 'user' | 'staff' | 'admin';
 }
 
 // 출석 기록 (실제로는 DB에서 가져옴)
@@ -27,19 +27,8 @@ interface InBodyRecord {
   bodyFatPercentage: number;
 }
 
-// Mock 회원 데이터 (role이 없거나 'user'인 경우만 명예의 전당에 포함)
-const mockMembers: MemberData[] = [
-  { id: 'user-1', name: '김민수', nickname: '헬린이민수', gender: 'male', role: 'user', profileImage: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=150&h=150&fit=crop&crop=face' },
-  { id: 'user-2', name: '이영희', nickname: '근육여신', gender: 'female', role: 'user', profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face' },
-  { id: 'user-3', name: '박철수', nickname: '철수형', gender: 'male', role: 'user', profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face' },
-  { id: 'user-4', name: '정수진', nickname: '수진이', gender: 'female', role: 'user', profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face' },
-  { id: 'user-5', name: '최동훈', nickname: '동훈이', gender: 'male', role: 'user', profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face' },
-  { id: 'user-6', name: '강미라', nickname: '미라언니', gender: 'female', role: 'user', profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face' },
-  { id: 'user-7', name: '윤재호', nickname: '재호형', gender: 'male', role: 'user', profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face' },
-  { id: 'user-8', name: '한소연', nickname: '소연이', gender: 'female', role: 'user', profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face' },
-  { id: 'user-9', name: '오준혁', nickname: '준혁이', gender: 'male', role: 'user', profileImage: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face' },
-  { id: 'user-10', name: '서민정', nickname: '민정이', gender: 'female', role: 'user', profileImage: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&h=150&fit=crop&crop=face' },
-];
+// 회원 데이터 - 빈 배열 (실제 데이터는 DB에서 가져옴)
+const mockMembers: MemberData[] = [];
 
 // 명예의 전당 대상 회원 필터 (직원/관리자 제외)
 const getEligibleMembers = (): MemberData[] => {
@@ -52,61 +41,14 @@ const isEligibleForHallOfFame = (memberId: string): boolean => {
   return !member?.role || member.role === 'user';
 };
 
-// Mock 출석 기록 (이번 달) - 일반 회원만 대상
+// 출석 기록 - 빈 배열
 const generateAttendanceRecords = (): AttendanceRecord[] => {
-  const records: AttendanceRecord[] = [];
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-
-  // 각 회원별 랜덤 출석 기록 생성 (명예의 전당 대상 회원만)
-  const attendanceCounts = [28, 26, 24, 22, 20, 18, 16, 14, 12, 10];
-  const eligibleMembers = getEligibleMembers();
-
-  eligibleMembers.forEach((member, index) => {
-    const count = attendanceCounts[index] || 10;
-    for (let i = 0; i < count; i++) {
-      const day = Math.floor(Math.random() * 28) + 1;
-      records.push({
-        memberId: member.id,
-        date: `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
-        checkInTime: '09:00:00',
-      });
-    }
-  });
-
-  return records;
+  return [];
 };
 
-// Mock 인바디 기록
+// 인바디 기록 - 빈 배열
 const generateInBodyRecords = (): { current: InBodyRecord[]; previous: InBodyRecord[] } => {
-  const currentRecords: InBodyRecord[] = [
-    { memberId: 'user-1', date: '2024-12-01', score: 85, skeletalMuscleMass: 35.2, bodyFatPercentage: 18.5 },
-    { memberId: 'user-2', date: '2024-12-01', score: 88, skeletalMuscleMass: 28.5, bodyFatPercentage: 22.0 },
-    { memberId: 'user-3', date: '2024-12-01', score: 82, skeletalMuscleMass: 38.1, bodyFatPercentage: 20.5 },
-    { memberId: 'user-4', date: '2024-12-01', score: 90, skeletalMuscleMass: 26.8, bodyFatPercentage: 21.0 },
-    { memberId: 'user-5', date: '2024-12-01', score: 78, skeletalMuscleMass: 40.5, bodyFatPercentage: 23.5 },
-    { memberId: 'user-6', date: '2024-12-01', score: 86, skeletalMuscleMass: 25.2, bodyFatPercentage: 24.0 },
-    { memberId: 'user-7', date: '2024-12-01', score: 80, skeletalMuscleMass: 36.8, bodyFatPercentage: 19.5 },
-    { memberId: 'user-8', date: '2024-12-01', score: 84, skeletalMuscleMass: 24.5, bodyFatPercentage: 25.5 },
-    { memberId: 'user-9', date: '2024-12-01', score: 76, skeletalMuscleMass: 42.0, bodyFatPercentage: 22.0 },
-    { memberId: 'user-10', date: '2024-12-01', score: 92, skeletalMuscleMass: 27.2, bodyFatPercentage: 20.0 },
-  ];
-
-  const previousRecords: InBodyRecord[] = [
-    { memberId: 'user-1', date: '2024-11-01', score: 78, skeletalMuscleMass: 33.8, bodyFatPercentage: 21.0 },
-    { memberId: 'user-2', date: '2024-11-01', score: 82, skeletalMuscleMass: 27.2, bodyFatPercentage: 24.5 },
-    { memberId: 'user-3', date: '2024-11-01', score: 80, skeletalMuscleMass: 37.5, bodyFatPercentage: 21.5 },
-    { memberId: 'user-4', date: '2024-11-01', score: 85, skeletalMuscleMass: 26.0, bodyFatPercentage: 23.0 },
-    { memberId: 'user-5', date: '2024-11-01', score: 75, skeletalMuscleMass: 39.8, bodyFatPercentage: 25.0 },
-    { memberId: 'user-6', date: '2024-11-01', score: 80, skeletalMuscleMass: 24.5, bodyFatPercentage: 26.5 },
-    { memberId: 'user-7', date: '2024-11-01', score: 78, skeletalMuscleMass: 36.2, bodyFatPercentage: 20.5 },
-    { memberId: 'user-8', date: '2024-11-01', score: 79, skeletalMuscleMass: 24.0, bodyFatPercentage: 27.0 },
-    { memberId: 'user-9', date: '2024-11-01', score: 72, skeletalMuscleMass: 41.2, bodyFatPercentage: 23.5 },
-    { memberId: 'user-10', date: '2024-11-01', score: 88, skeletalMuscleMass: 26.5, bodyFatPercentage: 22.0 },
-  ];
-
-  return { current: currentRecords, previous: previousRecords };
+  return { current: [], previous: [] };
 };
 
 // 명예의 전당 카테고리
@@ -125,14 +67,13 @@ const getDisplayName = (member: MemberData): string => {
   return member.name;
 };
 
-// 출석왕 랭킹 계산 (직원/관리자 제외)
+// 출석왕 랭킹 계산
 const calculateAttendanceRanking = (): HallOfFameEntry[] => {
   const records = generateAttendanceRecords();
   const now = new Date();
   const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const eligibleMembers = getEligibleMembers();
 
-  // 회원별 출석 횟수 집계 (명예의 전당 대상 회원만)
   const attendanceCount: Record<string, number> = {};
   records.forEach((record) => {
     if (isEligibleForHallOfFame(record.memberId)) {
@@ -140,7 +81,6 @@ const calculateAttendanceRanking = (): HallOfFameEntry[] => {
     }
   });
 
-  // 정렬 및 랭킹
   const sorted = Object.entries(attendanceCount)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 10);
@@ -161,7 +101,7 @@ const calculateAttendanceRanking = (): HallOfFameEntry[] => {
   });
 };
 
-// 인바디왕 랭킹 계산 (종합 점수 기준, 직원/관리자 제외)
+// 인바디왕 랭킹 계산
 const calculateInBodyRanking = (): HallOfFameEntry[] => {
   const { current } = generateInBodyRecords();
   const now = new Date();
@@ -189,14 +129,13 @@ const calculateInBodyRanking = (): HallOfFameEntry[] => {
   });
 };
 
-// 근력왕 랭킹 계산 - 남성 (골격근량 기준, 직원/관리자 제외)
+// 근력왕 랭킹 계산 - 남성
 const calculateMuscleRankingMale = (): HallOfFameEntry[] => {
   const { current } = generateInBodyRecords();
   const now = new Date();
   const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const eligibleMembers = getEligibleMembers();
 
-  // 남성 회원만 필터링 (명예의 전당 대상만)
   const maleMembers = eligibleMembers.filter((m) => m.gender === 'male');
   const maleMemberIds = maleMembers.map((m) => m.id);
 
@@ -221,14 +160,13 @@ const calculateMuscleRankingMale = (): HallOfFameEntry[] => {
   });
 };
 
-// 근력왕 랭킹 계산 - 여성 (골격근량 기준, 직원/관리자 제외)
+// 근력왕 랭킹 계산 - 여성
 const calculateMuscleRankingFemale = (): HallOfFameEntry[] => {
   const { current } = generateInBodyRecords();
   const now = new Date();
   const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const eligibleMembers = getEligibleMembers();
 
-  // 여성 회원만 필터링 (명예의 전당 대상만)
   const femaleMembers = eligibleMembers.filter((m) => m.gender === 'female');
   const femaleMemberIds = femaleMembers.map((m) => m.id);
 
@@ -253,7 +191,7 @@ const calculateMuscleRankingFemale = (): HallOfFameEntry[] => {
   });
 };
 
-// 다이어트왕 랭킹 계산 (체지방률 감소폭 기준, 직원/관리자 제외)
+// 다이어트왕 랭킹 계산
 const calculateDietRanking = (): HallOfFameEntry[] => {
   const { current, previous } = generateInBodyRecords();
   const now = new Date();
@@ -263,12 +201,11 @@ const calculateDietRanking = (): HallOfFameEntry[] => {
   const changes: { memberId: string; change: number }[] = [];
 
   current.forEach((curr) => {
-    // 명예의 전당 대상 회원만 집계
     if (!isEligibleForHallOfFame(curr.memberId)) return;
 
     const prev = previous.find((p) => p.memberId === curr.memberId);
     if (prev) {
-      const change = prev.bodyFatPercentage - curr.bodyFatPercentage; // 감소가 양수
+      const change = prev.bodyFatPercentage - curr.bodyFatPercentage;
       if (change > 0) {
         changes.push({ memberId: curr.memberId, change });
       }
@@ -293,7 +230,7 @@ const calculateDietRanking = (): HallOfFameEntry[] => {
   });
 };
 
-// 변화왕 랭킹 계산 (인바디 점수 상승폭 기준, 직원/관리자 제외)
+// 변화왕 랭킹 계산
 const calculateChangeRanking = (): HallOfFameEntry[] => {
   const { current, previous } = generateInBodyRecords();
   const now = new Date();
@@ -303,7 +240,6 @@ const calculateChangeRanking = (): HallOfFameEntry[] => {
   const changes: { memberId: string; change: number }[] = [];
 
   current.forEach((curr) => {
-    // 명예의 전당 대상 회원만 집계
     if (!isEligibleForHallOfFame(curr.memberId)) return;
 
     const prev = previous.find((p) => p.memberId === curr.memberId);

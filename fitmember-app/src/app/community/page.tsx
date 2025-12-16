@@ -182,7 +182,7 @@ export default function CommunityPage() {
 
               {/* Post Content */}
               {post.content && (
-                <p className="text-sm leading-relaxed mb-4">{post.content}</p>
+                <p className="text-sm leading-relaxed mb-4 whitespace-pre-line">{post.content}</p>
               )}
 
               {/* Post Actions */}

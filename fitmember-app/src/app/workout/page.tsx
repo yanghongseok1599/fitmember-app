@@ -15,6 +15,7 @@ import {
   Plus,
   Trash2,
   ChevronRight,
+  ChevronLeft,
   Dumbbell,
   Calendar,
   Clock,
@@ -34,11 +35,14 @@ import {
   Camera,
   X,
   Image as ImageIcon,
+  Save,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { EXERCISE_LIST } from '@/lib/exercises';
 import { inbodyStore, InBodyData } from '@/lib/inbody-store';
 import { workoutStore, WorkoutRecord } from '@/lib/workout-store';
 import { postStore } from '@/lib/post-store';
+import { pointStore } from '@/lib/point-store';
 import { useRouter } from 'next/navigation';
 
 interface WorkoutSet {
@@ -85,6 +89,7 @@ const EXERCISE_MET: Record<string, number> = {
   '러닝': 9.8,
   '걷기': 3.5,
   '사이클': 7.5,
+  '에코바이크': 9.0,
   '일립티컬': 5.0,
   '로잉머신': 7.0,
   '클라임밀': 8.0,
@@ -155,14 +160,27 @@ export default function WorkoutPage() {
 
   // Workout record states (저장 및 공유)
   const [savedRecord, setSavedRecord] = useState<WorkoutRecord | null>(null);
-  const [timeRemaining, setTimeRemaining] = useState<string>('');
   const [isSharing, setIsSharing] = useState(false);
+
+  // Calendar states
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [viewingPastRecord, setViewingPastRecord] = useState<WorkoutRecord | null>(null);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [recordedDates, setRecordedDates] = useState<string[]>([]);
 
   // Photo upload states (인증 사진)
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
   const [verifyPhoto, setVerifyPhoto] = useState<string | null>(null);
   const [verifyMessage, setVerifyMessage] = useState('');
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // Webcam states (데스크톱용)
+  const [showWebcam, setShowWebcam] = useState(false);
+  const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Workout start time for calorie calculation
   const [workoutStartTime] = useState(new Date());
@@ -191,21 +209,10 @@ export default function WorkoutPage() {
       setExercises(record.exercises);
       setCardioRecords(record.cardioRecords);
       setTimerCount(record.timerCount);
-      setTimeRemaining(workoutStore.formatTimeRemaining(record));
     }
+    // Load recorded dates for calendar
+    setRecordedDates(workoutStore.getRecordedDates());
   }, []);
-
-  // Update time remaining every minute
-  useEffect(() => {
-    if (!savedRecord) return;
-
-    const updateTimeRemaining = () => {
-      setTimeRemaining(workoutStore.formatTimeRemaining(savedRecord));
-    };
-
-    const interval = setInterval(updateTimeRemaining, 60000);
-    return () => clearInterval(interval);
-  }, [savedRecord]);
 
   // Auto-save workout record when exercises or cardio change
   useEffect(() => {
@@ -229,9 +236,89 @@ export default function WorkoutPage() {
     });
 
     setSavedRecord(record);
-    setTimeRemaining(workoutStore.formatTimeRemaining(record));
+    // Update recorded dates for calendar
+    setRecordedDates(workoutStore.getRecordedDates());
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exercises, cardioRecords, timerCount]);
+
+  // Handle date selection from calendar
+  const handleDateSelect = (date: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    setSelectedDate(date);
+    setShowCalendar(false);
+
+    if (date === today) {
+      // Show today's editable record
+      setViewingPastRecord(null);
+    } else {
+      // Show past record (read-only)
+      const pastRecord = workoutStore.getRecordByDate(date);
+      setViewingPastRecord(pastRecord || null);
+    }
+  };
+
+  // Calendar navigation
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCalendarMonth(prev => {
+      const newDate = new Date(prev);
+      if (direction === 'prev') {
+        newDate.setMonth(newDate.getMonth() - 1);
+      } else {
+        newDate.setMonth(newDate.getMonth() + 1);
+      }
+      return newDate;
+    });
+  };
+
+  // Generate calendar days
+  const generateCalendarDays = () => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDayOfWeek = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+
+    const days: (number | null)[] = [];
+
+    // Add empty slots for days before the first day of the month
+    for (let i = 0; i < startDayOfWeek; i++) {
+      days.push(null);
+    }
+
+    // Add all days in the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(day);
+    }
+
+    return days;
+  };
+
+  // Check if a date has a workout record
+  const hasWorkoutRecord = (day: number): boolean => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return recordedDates.includes(dateStr);
+  };
+
+  // Check if a date is today
+  const isToday = (day: number): boolean => {
+    const today = new Date();
+    return (
+      calendarMonth.getFullYear() === today.getFullYear() &&
+      calendarMonth.getMonth() === today.getMonth() &&
+      day === today.getDate()
+    );
+  };
+
+  // Check if a date is selected
+  const isSelected = (day: number): boolean => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return selectedDate === dateStr;
+  };
 
   // Handle photo selection
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -242,6 +329,51 @@ export default function WorkoutPage() {
         setVerifyPhoto(reader.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Webcam functions (데스크톱용)
+  const openWebcam = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: 640, height: 480 },
+        audio: false,
+      });
+      setWebcamStream(stream);
+      setShowWebcam(true);
+      // 비디오 요소에 스트림 연결
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 100);
+    } catch (error) {
+      console.error('웹캠 접근 실패:', error);
+      alert('카메라에 접근할 수 없습니다. 브라우저 권한을 확인해주세요.');
+    }
+  };
+
+  const closeWebcam = () => {
+    if (webcamStream) {
+      webcamStream.getTracks().forEach((track) => track.stop());
+      setWebcamStream(null);
+    }
+    setShowWebcam(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        setVerifyPhoto(dataUrl);
+        closeWebcam();
+      }
     }
   };
 
@@ -267,6 +399,10 @@ export default function WorkoutPage() {
       const images = verifyPhoto ? [verifyPhoto] : [];
       postStore.addPost(content, images, 'workout');
       workoutStore.markAsShared(savedRecord.id);
+
+      // 운동 인증 포인트 지급 (5포인트)
+      pointStore.earnPoints('user-1', 5, '운동 인증');
+
       setSavedRecord({ ...savedRecord, shared: true });
       setShowVerifyDialog(false);
       setVerifyPhoto(null);
@@ -683,10 +819,43 @@ export default function WorkoutPage() {
 
       {/* Date & Summary */}
       <div className="py-4 sm:py-6 space-y-3 sm:space-y-4">
-        <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+        <button
+          onClick={() => setShowCalendar(true)}
+          className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
           <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-          <span className="text-responsive-sm">{today}</span>
-        </div>
+          <span className="text-responsive-sm">
+            {viewingPastRecord
+              ? new Date(viewingPastRecord.date).toLocaleDateString('ko-KR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  weekday: 'long',
+                })
+              : today}
+          </span>
+          <ChevronRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+        </button>
+
+        {/* 과거 기록 보기 모드 알림 */}
+        {viewingPastRecord && (
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <p className="text-xs sm:text-sm text-blue-800">
+                과거 기록을 보고 있습니다 (읽기 전용)
+              </p>
+              <button
+                onClick={() => {
+                  setViewingPastRecord(null);
+                  setSelectedDate(new Date().toISOString().split('T')[0]);
+                }}
+                className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+              >
+                오늘로 돌아가기
+              </button>
+            </div>
+          </div>
+        )}
 
         {(exercises.length > 0 || cardioRecords.length > 0) && (
           <div className="grid grid-cols-2 gap-2 sm:gap-3">
@@ -727,16 +896,16 @@ export default function WorkoutPage() {
         )}
 
         {/* 기록 저장 상태 & 공유 버튼 */}
-        {savedRecord && (exercises.length > 0 || cardioRecords.length > 0) && (
-          <div className="p-3 sm:p-4 bg-amber-50 border border-amber-200 rounded-lg space-y-3">
+        {savedRecord && (exercises.length > 0 || cardioRecords.length > 0) && !viewingPastRecord && (
+          <div className="p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg space-y-3">
             <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+              <Save className="h-4 w-4 text-green-600 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-amber-800">
+                <p className="text-xs sm:text-sm font-medium text-green-800">
                   기록이 자동 저장되었습니다
                 </p>
-                <p className="text-[10px] sm:text-xs text-amber-600">
-                  {timeRemaining} (24시간 후 삭제)
+                <p className="text-[10px] sm:text-xs text-green-600">
+                  달력에서 이전 기록을 확인할 수 있어요
                 </p>
               </div>
             </div>
@@ -1093,19 +1262,29 @@ export default function WorkoutPage() {
                 웨이트
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-sm mx-auto">
+            <DialogContent
+              className="max-w-[calc(100%-2rem)] sm:max-w-sm mx-auto"
+              onInteractOutside={(e) => e.preventDefault()}
+              onPointerDownOutside={(e) => e.preventDefault()}
+            >
               <DialogHeader>
                 <DialogTitle className="text-base sm:text-lg font-light">웨이트 운동 추가</DialogTitle>
               </DialogHeader>
               <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4">
                 <div>
                   <label className="text-xs sm:text-sm text-muted-foreground mb-1.5 sm:mb-2 block">운동명</label>
-                  <Input
-                    placeholder="예: 벤치프레스"
+                  <select
                     value={exerciseName}
                     onChange={(e) => setExerciseName(e.target.value)}
-                    className="rounded-none border-border text-sm sm:text-base"
-                  />
+                    className="w-full p-2.5 sm:p-3 border border-border rounded-none bg-white text-sm sm:text-base"
+                  >
+                    <option value="">운동을 선택하세요</option>
+                    {Object.entries(EXERCISE_LIST).map(([num, data]) => (
+                      <option key={num} value={data.name}>
+                        {num}. {data.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   <div>
@@ -1174,7 +1353,11 @@ export default function WorkoutPage() {
                 유산소
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-sm mx-auto">
+            <DialogContent
+              className="max-w-[calc(100%-2rem)] sm:max-w-sm mx-auto"
+              onInteractOutside={(e) => e.preventDefault()}
+              onPointerDownOutside={(e) => e.preventDefault()}
+            >
               <DialogHeader>
                 <DialogTitle className="text-base sm:text-lg font-light">유산소 운동 추가</DialogTitle>
               </DialogHeader>
@@ -1189,6 +1372,7 @@ export default function WorkoutPage() {
                     <option value="러닝">러닝</option>
                     <option value="걷기">걷기</option>
                     <option value="사이클">사이클</option>
+                    <option value="에코바이크">에코바이크</option>
                     <option value="일립티컬">일립티컬</option>
                     <option value="로잉머신">로잉머신</option>
                     <option value="클라임밀">클라임밀(천국의 계단)</option>
@@ -1261,7 +1445,11 @@ export default function WorkoutPage() {
 
       {/* Edit Set Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-sm mx-auto">
+        <DialogContent
+          className="max-w-[calc(100%-2rem)] sm:max-w-sm mx-auto"
+          onInteractOutside={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="text-base sm:text-lg font-light">
               {editingExercise?.name} - {editingSetIndex !== null ? `${editingSetIndex + 1}세트` : ''}
@@ -1342,11 +1530,20 @@ export default function WorkoutPage() {
                 <label className="text-xs sm:text-sm text-muted-foreground mb-2 block">
                   인증 사진 (선택)
                 </label>
+                {/* 갤러리용 input (capture 없음) */}
                 <input
                   ref={photoInputRef}
                   type="file"
                   accept="image/*"
-                  capture="environment"
+                  onChange={handlePhotoSelect}
+                  className="hidden"
+                />
+                {/* 카메라용 input - iOS/Android 호환 */}
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture
                   onChange={handlePhotoSelect}
                   className="hidden"
                 />
@@ -1367,13 +1564,25 @@ export default function WorkoutPage() {
                     </button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => photoInputRef.current?.click()}
-                    className="w-full h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
-                  >
-                    <Camera className="h-8 w-8" />
-                    <span className="text-xs sm:text-sm">사진 추가하기</span>
-                  </button>
+                  <div className="space-y-3">
+                    {/* 카메라/갤러리 선택 버튼 */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={openWebcam}
+                        className="flex-1 h-24 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                      >
+                        <Camera className="h-6 w-6" />
+                        <span className="text-xs sm:text-sm">카메라</span>
+                      </button>
+                      <button
+                        onClick={() => photoInputRef.current?.click()}
+                        className="flex-1 h-24 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                      >
+                        <ImageIcon className="h-6 w-6" />
+                        <span className="text-xs sm:text-sm">갤러리</span>
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -1444,6 +1653,187 @@ export default function WorkoutPage() {
                     </>
                   )}
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Webcam Modal (데스크톱용) */}
+      {showWebcam && (
+        <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg overflow-hidden max-w-md w-full">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="font-medium">카메라</h3>
+              <button onClick={closeWebcam} className="p-1 hover:bg-muted rounded">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="relative bg-black">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full aspect-[4/3] object-cover"
+              />
+            </div>
+            <div className="p-4 flex justify-center">
+              <button
+                onClick={capturePhoto}
+                className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors shadow-lg"
+              >
+                <Camera className="h-8 w-8" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden canvas for photo capture */}
+      <canvas ref={canvasRef} className="hidden" />
+
+      {/* Calendar Modal */}
+      {showCalendar && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-lg w-full max-w-sm overflow-hidden">
+            {/* Calendar Header */}
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <button
+                onClick={() => navigateMonth('prev')}
+                className="p-2 hover:bg-muted rounded-full transition-colors"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <h3 className="text-base sm:text-lg font-medium">
+                {calendarMonth.toLocaleDateString('ko-KR', {
+                  year: 'numeric',
+                  month: 'long',
+                })}
+              </h3>
+              <button
+                onClick={() => navigateMonth('next')}
+                className="p-2 hover:bg-muted rounded-full transition-colors"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Calendar Grid */}
+            <div className="p-4">
+              {/* Day Headers */}
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {['일', '월', '화', '수', '목', '금', '토'].map((day, i) => (
+                  <div
+                    key={day}
+                    className={cn(
+                      "text-center text-xs font-medium py-2",
+                      i === 0 ? "text-red-500" : i === 6 ? "text-blue-500" : "text-muted-foreground"
+                    )}
+                  >
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {/* Calendar Days */}
+              <div className="grid grid-cols-7 gap-1">
+                {generateCalendarDays().map((day, index) => (
+                  <div key={index} className="aspect-square">
+                    {day && (
+                      <button
+                        onClick={() => {
+                          const year = calendarMonth.getFullYear();
+                          const month = calendarMonth.getMonth();
+                          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                          handleDateSelect(dateStr);
+                        }}
+                        className={cn(
+                          "w-full h-full rounded-full flex flex-col items-center justify-center text-sm transition-colors relative",
+                          isToday(day) && "bg-primary text-white",
+                          isSelected(day) && !isToday(day) && "bg-primary/20 text-primary",
+                          !isToday(day) && !isSelected(day) && "hover:bg-muted",
+                          index % 7 === 0 && !isToday(day) && !isSelected(day) && "text-red-500",
+                          index % 7 === 6 && !isToday(day) && !isSelected(day) && "text-blue-500"
+                        )}
+                      >
+                        {day}
+                        {hasWorkoutRecord(day) && (
+                          <span
+                            className={cn(
+                              "absolute bottom-1 w-1 h-1 rounded-full",
+                              isToday(day) ? "bg-white" : "bg-primary"
+                            )}
+                          />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Calendar Footer */}
+            <div className="p-4 border-t border-border flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-primary" />
+                  운동 기록
+                </span>
+              </div>
+              <button
+                onClick={() => setShowCalendar(false)}
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Past Record View Modal */}
+      {viewingPastRecord && (
+        <div className="fixed bottom-16 sm:bottom-20 left-0 right-0 p-3 sm:p-4 bg-gradient-to-t from-background via-background to-transparent">
+          <div className="max-w-lg mx-auto">
+            <div className="p-4 bg-white rounded-lg border border-border shadow-lg">
+              <h4 className="font-medium mb-3">
+                {new Date(viewingPastRecord.date).toLocaleDateString('ko-KR', {
+                  month: 'long',
+                  day: 'numeric',
+                })} 운동 기록
+              </h4>
+
+              {/* Summary */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="p-2 bg-muted/30 rounded">
+                  <p className="text-[10px] text-muted-foreground">총 볼륨</p>
+                  <p className="text-sm font-medium text-primary">{viewingPastRecord.totalVolume.toLocaleString()}kg</p>
+                </div>
+                <div className="p-2 bg-muted/30 rounded">
+                  <p className="text-[10px] text-muted-foreground">소비 칼로리</p>
+                  <p className="text-sm font-medium text-orange-500">{viewingPastRecord.totalCalories}kcal</p>
+                </div>
+              </div>
+
+              {/* Exercises */}
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {viewingPastRecord.exercises.map((exercise) => (
+                  <div key={exercise.id} className="text-xs">
+                    <span className="font-medium">{exercise.name}</span>
+                    <span className="text-muted-foreground ml-2">
+                      {exercise.sets.length}세트 | 최대 {Math.max(...exercise.sets.map(s => s.weight))}kg
+                    </span>
+                  </div>
+                ))}
+                {viewingPastRecord.cardioRecords.map((cardio) => (
+                  <div key={cardio.id} className="text-xs">
+                    <span className="font-medium">{cardio.name}</span>
+                    <span className="text-muted-foreground ml-2">
+                      {cardio.duration}분 | {cardio.speed}km/h
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
